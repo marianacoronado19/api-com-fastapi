@@ -1,6 +1,5 @@
 from model.database import Database
 from fastapi import HTTPException
-from typing import Optional, List, Tuple, Any 
 
 tabelas_permitidas = {
         'serie' : 'idserie',
@@ -20,10 +19,18 @@ class MustWatch:
         self.item = item
         self.item_id = item_id
         self.coluna_id = tabelas_permitidas.get(table_name)
-
-    def consultarTabela(self):
+        
+    def consultarSerie(self):
         """Consulta uma tabela específica no banco de dados pelo ID."""
+        db.conectar()
+
+        if self.coluna_id is None:
+            raise HTTPException(status_code=400, detail="Tabela não permitida")
+
         try:
+            if self.table_name not in tabelas_permitidas:
+                raise HTTPException(status_code=400, detail="Tabela não permitida")
+
             if self.item_id is None:
                 sql = f"SELECT * FROM {self.table_name}"
                 params = ()
@@ -32,57 +39,73 @@ class MustWatch:
                 params = (self.item_id,)
 
             resultado = db.consultar(sql, params)
-            db.desconectar()
-            
+
             if not resultado:
                 raise HTTPException(status_code=404, detail="Item não encontrado")
 
             return resultado
         except Exception as e:
-            db.desconectar()
             raise HTTPException(status_code=500, detail=f"Erro ao consultar o banco de dados: {str(e)}")
-    
+        finally:
+            db.desconectar()
 
-    @staticmethod # decorador -> não precisa instanciar a classe para usar o método
-    def listarTarefas():
-        """Retornar uma lista com todas as tarefas já cadastradas."""
-        db = Database()
+    def inserirSerie(self):
+        """Adiciona um item a uma tabela específica no banco de dados."""
         db.conectar()
 
-        sql = 'SELECT id, titulo, data_conclusao FROM tarefa'
-        tarefas = db.consultar(sql)
-        db.desconectar()
-        return tarefas if tarefas else [] # Se tarefas for None, retorna uma lista vazia -> moderna, só funciona em Python
-    
-    @staticmethod
-    def apagarTarefa(idTarefa):
-        """Apaga uma tarefa cadastrada no banco de dados."""
-        db = Database()
-        db.conectar()
+        if self.coluna_id is None:
+            raise HTTPException(status_code=400, detail="Tabela não permitida")
 
-        sql = 'DELETE FROM tarefa WHERE id = %s'
-        params = (idTarefa,) # Precisa passar como tupla? SIM! -> espera 1 ou mais valores
-        db.executar(sql, params)
-        db.desconectar()
+        try:
 
-    @staticmethod
-    def buscarTarefa(idTarefa):
-        """Busca uma tarefa pelo ID no banco de dados."""
-        db = Database()
-        db.conectar()
-        sql = 'SELECT id, titulo, data_conclusao FROM tarefa WHERE id = %s'
-        params = (idTarefa,)
-        resultado = db.consultar(sql, params)
-        db.desconectar()
-        return resultado if resultado else None
+            if not self.item:
+                raise HTTPException(status_code=400, detail="Nenhum dado fornecido para adicionar")
+
+            colunas = ', '.join(self.item.keys())
+            valores = ', '.join(['%s'] * len(self.item))
+            sql = f"INSERT INTO {self.table_name} ({colunas}) VALUES ({valores})"
+            params = tuple(self.item.values())
+
+            db.executar(sql, params)
+            db.desconectar()
+        except Exception as e:
+            db.desconectar()
+            raise HTTPException(status_code=500, detail=f"Erro ao adicionar o item: {str(e)}")
         
-
-    def editarTarefa(idTarefa, titulo, data_conclusao):
-        """Editar uma tarefa cadastrada no banco de dados."""
-        db = Database()
+    def removerSerie(self):
+        '''Remove um item de alguma lista do banco de dados'''
         db.conectar()
 
-        sql = 'UPDATE tarefa SET titulo = %s, data_conclusao = %s WHERE id = %s'
-        params = (titulo, data_conclusao, idTarefa) # Precisa passar como tupla? SIM! -> espera 1 ou mais valores
-        db.executar(sql, params)
-        db.desconectar()
+        try:
+            if self.coluna_id is None:
+                raise HTTPException(status_code=400, detail="Tabela não permitida")
+            sql = f"DELETE FROM {self.table_name} WHERE {self.coluna_id} = %s"
+            params = (self.item_id,)
+
+            db.executar(sql, params)
+            db.desconectar()
+
+        except Exception as e:
+            db.desconectar()
+            raise HTTPException(status_code=500, detail=f"Erro ao remover o item: {str(e)}")
+        
+    def atualizarSerie(self):
+        '''Atualiza um item de alguma lista do banco de dados'''
+        db.conectar()
+
+        try:
+            if self.coluna_id is None:
+                raise HTTPException(status_code=400, detail="Não é possível atualizar a tabela")
+            
+            if not self.item:
+                raise HTTPException(status_code=400, detail="Nenhum dado fornecido para atualização")
+            
+            set_clause = ", ".join([f"{key} = %s" for key in self.item.keys()]) # para cada chave do dicionário, cria uma string no formato "chave = %s", separando por vírgula
+            sql = f"UPDATE {self.table_name} SET {set_clause} WHERE {self.coluna_id} = %s"
+            params = tuple(self.item.values()) + (self.item_id,)
+
+            db.executar(sql, params)
+            db.desconectar()
+        except Exception as e:
+            db.desconectar()
+            raise HTTPException(status_code=500, detail=f"Erro ao atualizar o item: {str(e)}")

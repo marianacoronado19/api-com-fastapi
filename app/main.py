@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from model.database import Database
 from model.series import MustWatch
 
@@ -13,143 +13,32 @@ def read_root():
 @app.get("/{table_name}/{item_id}")
 @app.get("/{table_name}")
 def read_item(table_name: str, item_id: int = None):
-    """
-    Consulta uma tabela específica no banco de dados pelo ID.
-    """
-    db.conectar()
+    must_watch = MustWatch(table_name=table_name, item={}, item_id=item_id)
 
-    tabelas_permitidas = {
-        'serie' : 'idserie',
-        'categoria' : 'idcategoria',
-        'ator' : 'idator',
-        'motivo_assistir' : 'idmotivo_assistir',
-        'avaliacao_serie' : 'idavaliacao_serie',
-        'ator_serie' : 'idator_serie',
-    }
+    resultado = must_watch.consultarSerie()
 
-    coluna_id = tabelas_permitidas.get(table_name)
-
-    try:
-        if item_id is None:
-            sql = f"SELECT * FROM {table_name}"
-            params = ()
-        else:
-            sql = f"SELECT * FROM {table_name} WHERE {coluna_id} = %s"
-            params = (item_id,)
-
-        resultado = db.consultar(sql, params)
-        db.desconectar()
-        
-        if not resultado:
-            raise HTTPException(status_code=404, detail="Item não encontrado")
-
-        return resultado
-    except Exception as e:
-        db.desconectar()
-        raise HTTPException(status_code=500, detail=f"Erro ao consultar o banco de dados: {str(e)}")
+    return resultado
     
 @app.post("/{table_name}")
 def create_item(table_name: str, item: dict):
-    '''Adiciona um item a uma tabela específica no banco de dados'''
-    db.conectar()
+    must_watch = MustWatch(table_name=table_name, item=item) 
 
-    try:
-        if table_name == 'serie':
-            sql = "INSERT INTO serie (titulo, descricao, ano_lancamento, idcategoria) VALUES (%s, %s, %s, %s)"
-            params = (item["titulo"], item["descricao"], item["ano_lancamento"], item["idcategoria"])
-        elif table_name == 'categoria':
-            sql = "INSERT INTO categoria (nome) VALUES (%s)"
-            params = (item['nome'],)
-        elif table_name == 'ator':
-            sql = "INSERT INTO ator (nome) VALUES (%s)"
-            params = (item['nome'],)
-        elif table_name == 'motivo_assistir':
-            sql = "INSERT INTO motivo_assistir (idserie, motivo) VALUES (%s, %s)"
-            params = (item['idserie'], item['motivo'])
-        elif table_name == 'avaliacao_serie':
-            sql = "INSERT INTO avaliacao_serie (idserie, nota, comentario, data_avaliacao) VALUES (%s, %s, %s, %s)"
-            params = (item['idserie'], item['nota'], item['comentario'], item['data_avaliacao'])
-        elif table_name == 'ator_serie':
-            sql = "INSERT INTO ator_serie (idator, idserie, personagem) VALUES (%s, %s, %s)"
-            params = (item['idator'], ['idserie'], item['personagem'])
-        else:
-            raise HTTPException(status_code=400, detail="Tabela não permitida")
+    must_watch.inserirSerie()
 
-        db.executar(sql, params)
-        db.desconectar()
+    return {"message": "Item adicionado com sucesso!"}
 
-        return {"message": "Item adicionado com sucesso!"}
-    except Exception as e:
-        db.desconectar()
-        raise HTTPException(status_code=500, detail=f"Erro ao adicionar o item: {str(e)}")
-    
 @app.delete("/{table_name}/{item_id}")
 def delete_item(table_name: str, item_id: int):
+    must_watch = MustWatch(table_name=table_name, item={}, item_id=item_id)
 
-    '''Remove um item de uma tabela específica no banco de dados'''
-    db.conectar()
+    must_watch.removerSerie()
 
-    try:
-        tabelas_permitidas = {
-            'serie' : 'idserie',
-            'categoria' : 'idcategoria',
-            'ator' : 'idator',
-            'motivo_assistir' : 'idmotivo_assistir',
-        }
-
-        coluna_id = tabelas_permitidas.get(table_name)
-
-        if coluna_id is None:
-            raise HTTPException(status_code=400, detail="Tabela não permitida")
-
-        sql = f"DELETE FROM {table_name} WHERE {coluna_id} = %s"
-        params = (item_id,)
-
-        db.executar(sql, params)
-        db.desconectar()
-
-        return {"message": "Item removido com sucesso!"}
-    except Exception as e:
-        db.desconectar()
-        raise HTTPException(status_code=500, detail=f"Erro ao remover o item: {str(e)}")
+    return {"message": "Item deletado com sucesso!"}
 
 @app.put("/{table_name}/{item_id}")
 def update_item(table_name: str, item_id: int, item: dict):
-    """
-    Atualiza um item em uma tabela específica no banco de dados.
-    """
-    db.conectar()
+    must_watch = MustWatch(table_name=table_name, item=item, item_id=item_id)
 
-    try:
-        # Tabelas permitidas e suas colunas de ID
-        tabelas_permitidas = {
-            'serie': 'idserie',
-            'categoria': 'idcategoria',
-            'ator': 'idator',
-            'motivo_assistir': 'idmotivo_assistir',
-            'avaliacao_serie': 'idavaliacao_serie',
-            'ator_serie': 'idator_serie',
-        }
+    must_watch.atualizarSerie()
 
-        # Verifica se a tabela é permitida
-        coluna_id = tabelas_permitidas.get(table_name)
-        if coluna_id is None:
-            raise HTTPException(status_code=400, detail="Tabela não permitida")
-
-        # Verifica se o dicionário `item` não está vazio
-        if not item:
-            raise HTTPException(status_code=400, detail="Nenhum dado fornecido para atualização")
-
-        # Monta a consulta SQL dinamicamente
-        set_clause = ", ".join([f"{key} = %s" for key in item.keys()])
-        sql = f"UPDATE {table_name} SET {set_clause} WHERE {coluna_id} = %s"
-        params = tuple(item.values()) + (item_id,)
-
-        # Executa a consulta
-        db.executar(sql, params)
-        db.desconectar()
-
-        return {"message": "Item atualizado com sucesso!", "data": item}
-    except Exception as e:
-        db.desconectar()
-        raise HTTPException(status_code=500, detail=f"Erro ao atualizar o item: {str(e)}")
+    return {"message": "Item atualizado com sucesso!"}
