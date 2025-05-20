@@ -39,7 +39,7 @@ class Database:
             self.connection.close()
         print("Conexão com o banco de dados encerrada com sucesso!")
 
-    def executar(self, sql: str, params: Optional[Tuple[Any, ...]] = None) -> Optional[List[dict]]:
+    def executar_consulta(self, sql: str, params: Optional[Tuple[Any, ...]] = None, fetch: bool = False) -> Optional[List[dict]]:
         """Executa uma instrução no banco de dados"""
         if self.connection is None and self.cursor is None:
             print('Conexão ao banco de dados não estabelecida!')
@@ -47,20 +47,24 @@ class Database:
         
         try:
             self.cursor.execute(sql, params)
-            self.connection.commit()
-            return self.cursor
+            if fetch:
+                resultado = self.cursor.fetchall()
+                return resultado
+            else:
+                self.connection.commit()
+                return None
         except Error as e:
             print(f'Erro de execução: {e}')
             return None
         
-    def consultar(self, sql: str, params: Optional[Tuple[Any,...]] = None) -> Optional[List[dict]]:
-        """Executa uma consulta no banco de dados"""
-        if self.connection is None and self.cursor is None:
-            print('Conexão ao banco de dados não estabelecida!')
-            return None
-        try:
-            self.cursor.execute(sql, params)
-            return self.cursor.fetchall()
-        except Error as e:
-            print(f'Erro de execução: {e}')
-            return None
+    # def consultar(self, sql: str, params: Optional[Tuple[Any,...]] = None) -> Optional[List[dict]]:
+    #     """Executa uma consulta no banco de dados"""
+    #     if self.connection is None and self.cursor is None:
+    #         print('Conexão ao banco de dados não estabelecida!')
+    #         return None
+    #     try:
+    #         self.cursor.execute(sql, params)
+    #         return self.cursor.fetchall()
+    #     except Error as e:
+    #         print(f'Erro de execução: {e}')
+    #         return None

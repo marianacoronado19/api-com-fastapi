@@ -32,11 +32,12 @@ class MustWatch:
             if self.item_id is None:
                 sql = f"SELECT * FROM {self.table_name}"
                 params = ()
+
             else:
                 sql = f"SELECT * FROM {self.table_name} WHERE {self.coluna_id} = %s"
                 params = (self.item_id,)
 
-            resultado = db.consultar(sql, params)
+            resultado = db.executar_consulta(sql, params, fetch=True)
 
             if not resultado:
                 raise HTTPException(status_code=404, detail="Item não encontrado")
@@ -66,7 +67,7 @@ class MustWatch:
             params = tuple(self.item.values())
             
 
-            db.executar(sql, params)
+            db.executar_consulta(sql, params)
             db.desconectar()
         
         except Exception as e:
@@ -85,7 +86,7 @@ class MustWatch:
             sql = f"DELETE FROM {self.table_name} WHERE {self.coluna_id} = %s"
             params = (self.item_id,)
 
-            db.executar(sql, params)
+            db.executar_consulta(sql, params)
             db.desconectar()
 
         except Exception as e:
@@ -108,7 +109,7 @@ class MustWatch:
             sql = f"UPDATE {self.table_name} SET {set_clause} WHERE {self.coluna_id} = %s"
             params = tuple(self.item.values()) + (self.item_id,)
 
-            db.executar(sql, params)
+            db.executar_consulta(sql, params)
             db.desconectar()
         except Exception as e:
             db.desconectar()
