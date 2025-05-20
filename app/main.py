@@ -7,7 +7,7 @@ app = FastAPI()
 db = Database()
 
 @app.get('/')
-def read_root():
+def main_screen():
     return {"Series": "Must Watch"}
 
 @app.get("/{table_name}/{item_id}")
