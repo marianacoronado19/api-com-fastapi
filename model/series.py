@@ -1,7 +1,7 @@
 from model.database import Database
 from fastapi import HTTPException
 
-tabelas_permitidas = {
+TABELAS_PERMITIDAS = {
         'serie' : 'idserie',
         'categoria' : 'idcategoria',
         'ator' : 'idator',
@@ -18,14 +18,14 @@ class MustWatch:
         self.table_name = table_name
         self.item = item
         self.item_id = item_id
-        self.coluna_id = tabelas_permitidas.get(table_name)
+        self.coluna_id = TABELAS_PERMITIDAS.get(table_name)
         
     def consultarSerie(self):
         """Consulta uma tabela específica no banco de dados pelo ID."""
         db.conectar()
 
         try:
-            if self.table_name not in tabelas_permitidas:
+            if self.table_name not in TABELAS_PERMITIDAS:
                 raise HTTPException(status_code=406, detail="Tabela não encontrada")
                 # Erro 406: Not Acceptable 
 
@@ -61,11 +61,12 @@ class MustWatch:
                 raise HTTPException(status_code=400, detail="Nenhum dado fornecido para adicionar")
             # Erro 400: Bad Request
 
-            colunas = ', '.join(self.item.keys())
-            valores = ', '.join(['%s'] * len(self.item))
+            colunas = ', '.join(self.item.keys()) 
+            # para cada chave do dicionário, cria uma string separada por vírgula
+            valores = ', '.join(['%s'] * len(self.item)) 
+            # para cada valor do dicionário, cria uma string no formato "%s", separando por vírgula. .join = juntar strings
             sql = f"INSERT INTO {self.table_name} ({colunas}) VALUES ({valores})"
             params = tuple(self.item.values())
-            
 
             db.executar_consulta(sql, params)
             db.desconectar()
@@ -83,6 +84,7 @@ class MustWatch:
             if self.coluna_id is None:
                 raise HTTPException(status_code=406, detail="Mudança não permitida (Não foi atribuído um ID)")
                 # Erro 406: Not Acceptable
+
             sql = f"DELETE FROM {self.table_name} WHERE {self.coluna_id} = %s"
             params = (self.item_id,)
 
@@ -105,7 +107,8 @@ class MustWatch:
                 raise HTTPException(status_code=400, detail="Nenhum dado fornecido para atualização")
                 # Erro 400: Bad Request
             
-            set_clause = ", ".join([f"{key} = %s" for key in self.item.keys()]) # para cada chave do dicionário, cria uma string no formato "chave = %s", separando por vírgula
+            set_clause = ", ".join([f"{key} = %s" for key in self.item.keys()]) 
+            # para cada chave do dicionário, cria uma string no formato "chave = %s", separando por vírgula
             sql = f"UPDATE {self.table_name} SET {set_clause} WHERE {self.coluna_id} = %s"
             params = tuple(self.item.values()) + (self.item_id,)
 
