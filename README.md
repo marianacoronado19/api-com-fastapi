@@ -59,9 +59,7 @@ Endpoints
 | Método	|     Rota	   |           Descrição         |
 |--------|--------------|------------------------------|
 | GET    | /serie	     |  Retorna todas as séries      |
-|--------|--------------|------------------------------|
 | GET    | /serie/{id}  | Retorna uma série por ID     |
-|--------|--------------|------------------------------|
 | POST   | /serie	     | Cria uma nova série           |
 |--------|--------------|------------------------------|
 | PUT    | /serie/{id}  | Atualiza uma série existente |
