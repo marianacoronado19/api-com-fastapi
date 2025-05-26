@@ -3,9 +3,17 @@ from model.database import Database
 from model.series import MustWatch
 from typing import Any
 
-app = FastAPI()
-
-db = Database()
+app = FastAPI(
+    title="Must Watch API",
+    description="API para gerenciar séries, categorias, atores e avaliações.",
+    version="1.0.0",
+    openapi_tags=[
+        {
+            "name": "Séries",
+            "description": "Operações relacionadas a séries, categorias, atores e avaliações."
+        }
+    ]
+)
 
 @app.get("/",
     summary="Página inicial",

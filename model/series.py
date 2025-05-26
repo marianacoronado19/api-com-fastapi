@@ -9,6 +9,7 @@ TABELAS_PERMITIDAS = {
         'avaliacao_serie' : 'idavaliacao_serie',
         'ator_serie' : 'idator_serie',
 }
+# Variável que armazena um dicionário com as tabelas permitidas e suas respectivas colunas de ID.
 
 db = Database()
 
@@ -26,8 +27,8 @@ class MustWatch:
 
         try:
             if self.table_name not in TABELAS_PERMITIDAS:
-                raise HTTPException(status_code=406, detail="Tabela não encontrada")
-                # Erro 406: Not Acceptable 
+                raise HTTPException(status_code=403, detail="Tabela não permitida")
+                # Erro 403: Forbidden
 
             if self.item_id is None:
                 sql = f"SELECT * FROM {self.table_name}"
@@ -82,8 +83,8 @@ class MustWatch:
 
         try:
             if self.coluna_id is None:
-                raise HTTPException(status_code=406, detail="Mudança não permitida (Não foi atribuído um ID)")
-                # Erro 406: Not Acceptable
+                raise HTTPException(status_code=403, detail="Mudança não permitida (Não foi atribuído um ID)")
+                # Erro 403: Forbidden
 
             sql = f"DELETE FROM {self.table_name} WHERE {self.coluna_id} = %s"
             params = (self.item_id,)
@@ -101,8 +102,8 @@ class MustWatch:
 
         try:
             if self.coluna_id is None:
-                raise HTTPException(status_code=406, detail="Mudança não permitida (Não foi atribuído um ID)")
-                # Erro 406: Not Acceptable
+                raise HTTPException(status_code=403, detail="Mudança não permitida (Não foi atribuído um ID)")
+                # Erro 403: Forbidden
             if not self.item:
                 raise HTTPException(status_code=400, detail="Nenhum dado fornecido para atualização")
                 # Erro 400: Bad Request

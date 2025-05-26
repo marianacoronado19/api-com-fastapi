@@ -12,7 +12,7 @@ class Database:
         self.password: str = getenv('DB_PSWD')
         self.database: str = getenv('DB_NAME')
         self.connection: Optional[MySQLConnection] = None
-        self.cursor: Optional[List[dict]] = None
+        self._cursor: Optional[List[dict]] = None
 
     def conectar(self) -> None:
         """Estabelece uma conexão com o banco de dados."""
