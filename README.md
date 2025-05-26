@@ -61,8 +61,10 @@ Endpoints
 | GET    | /serie	|  Retorna todas as séries
 | GET    | /serie/{id}  | Retorna uma série por ID     
 | POST   | /serie	| Cria uma nova série     
-| PUT    | /serie/{id}   Atualiza uma série existente 
-| DELETE | /serie/{id}   Remove uma série             
+| PUT    | /serie/{id}  | Atualiza uma série existente 
+| DELETE | /serie/{id}  | Remove uma série             
+
+
 Substitua serie por qualquer tabela permitida: categoria, ator, motivo_assistir, avaliacao_serie, ator_serie.
  
 ## Atualizar uma série
