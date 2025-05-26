@@ -58,11 +58,12 @@ Redoc: http://127.0.0.1:8000/redoc
 Endpoints
 | Método	|     Rota	   |           Descrição         |
 |--------|--------------|------------------------------|
+| GET    | /		|  Exibe uma mensagem introdutória
 | GET    | /serie	|  Retorna todas as séries
-| GET    | /serie/{id}  | Retorna uma série por ID     
-| POST   | /serie	| Cria uma nova série     
-| PUT    | /serie/{id}  | Atualiza uma série existente 
-| DELETE | /serie/{id}  | Remove uma série             
+| GET    | /serie/{id}  |  Retorna uma série por ID     
+| POST   | /serie	|  Cria uma nova série     
+| PUT    | /serie/{id}  |  Atualiza uma série existente 
+| DELETE | /serie/{id}  |  Remove uma série             
 
 
 Substitua serie por qualquer tabela permitida: categoria, ator, motivo_assistir, avaliacao_serie, ator_serie.
