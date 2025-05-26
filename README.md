@@ -20,7 +20,7 @@ Este projeto é uma API construída com **FastAPI** e **MySQL** para gerenciar i
 
  
 ## Instalação e Setup
-```bash``
+`bash`
 # 1. Clone o repositório
 git clone https://github.com/seu-usuario/must-watch-api.git
 cd must-watch-api
