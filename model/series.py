@@ -1,9 +1,5 @@
-from datetime import date
-from xml.dom.expatbuilder import Rejecter
 from model.database import Database
 from fastapi import HTTPException
-from pydantic import BaseModel, ValidationError
-from typing import Optional
 
 tabelas_permitidas = {
         'serie' : 'idserie',
@@ -16,29 +12,9 @@ tabelas_permitidas = {
 
 db = Database()
 
-class Serie(BaseModel):
-    idserie: Optional[int] = None
-    idcategoria: Optional[int] = None
-    idator: Optional[int]  = None
-    idmotivo_assistir: Optional[int] = None
-    idavaliacao_serie: Optional[int] = None
-    idator_serie: Optional[int] = None
-
-    titulo: Optional[str] = None
-    descricao: Optional[str] = None
-    ano_lancamento: Optional[int] = None
-    
-    nome: Optional[str] = None
-    motivo: Optional[str] = None
-    nota: Optional[int] = None
-    comentario: Optional[str] = None
-    data_avaliacao: Optional[date] = None
-    
-    personagem: Optional[str] = None
-
 class MustWatch:
     def __init__(self, table_name: str, item: dict, item_id: int = None):
-        """Construtor da classe MustWatch."""
+        """Construtor da classe Serie."""
         self.table_name = table_name
         self.item = item
         self.item_id = item_id
@@ -67,12 +43,7 @@ class MustWatch:
                 raise HTTPException(status_code=404, detail="Item não encontrado")
                 # Erro 404: Not Found
 
-            if resultado and isinstance(resultado, list): # Verifica se o resultado é uma lista
-                return resultado
-            
-            else:
-                raise HTTPException(status_code=406, detail="Erro de formato na resposta")
-                # Erro 406: Not Acceptable
+            return resultado
         
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Erro ao consultar o banco de dados: {str(e)}")
@@ -87,23 +58,18 @@ class MustWatch:
 
         try:
             if not self.item:
-                raise HTTPException(status_code=400, detail="Nenhum dado fornecido para adicionar.")
+                raise HTTPException(status_code=400, detail="Nenhum dado fornecido para adicionar")
             # Erro 400: Bad Request
 
-            colunas = ', '.join(self.item.keys()) # para cada chave do dicionário, cria uma string no formato "chave", separando por vírgula
-            valores = ', '.join(['%s'] * len(self.item)) # para cada valor do dicionário, cria uma string no formato "%s", separando por vírgula
+            colunas = ', '.join(self.item.keys())
+            valores = ', '.join(['%s'] * len(self.item))
             sql = f"INSERT INTO {self.table_name} ({colunas}) VALUES ({valores})"
             params = tuple(self.item.values())
             
-            try:
-                validacao = Serie(**self.item) # Valida os dados do dicionário
-                db.executar_consulta(sql, params)
-                db.desconectar()
-                return validacao
-            except ValidationError:
-                raise HTTPException(status_code=406, detail="Erro de validação na tipagem. Tente inserir valores de outros tipos.")
-                # Erro 406: Not Acceptable
 
+            db.executar_consulta(sql, params)
+            db.desconectar()
+        
         except Exception as e:
             db.desconectar()
             raise HTTPException(status_code=500, detail=f"Erro ao adicionar o item: {str(e)}")
@@ -139,19 +105,12 @@ class MustWatch:
                 raise HTTPException(status_code=400, detail="Nenhum dado fornecido para atualização")
                 # Erro 400: Bad Request
             
-            atualizacao = ", ".join([f"{key} = %s" for key in self.item.keys()]) # para cada chave do dicionário, cria uma string no formato "chave = %s", separando por vírgula
-            sql = f"UPDATE {self.table_name} SET {atualizacao} WHERE {self.coluna_id} = %s"
+            set_clause = ", ".join([f"{key} = %s" for key in self.item.keys()]) # para cada chave do dicionário, cria uma string no formato "chave = %s", separando por vírgula
+            sql = f"UPDATE {self.table_name} SET {set_clause} WHERE {self.coluna_id} = %s"
             params = tuple(self.item.values()) + (self.item_id,)
 
-            try:
-                validacao = Serie(**self.item) # Valida os dados do dicionário
-                db.executar_consulta(sql, params)
-                db.desconectar()
-                return validacao
-            except ValidationError:
-                raise HTTPException(status_code=406, detail="Erro de validação na tipagem. Tente inserir valores de outros tipos.")
-                # Erro 406: Not Acceptable
-
+            db.executar_consulta(sql, params)
+            db.desconectar()
         except Exception as e:
             db.desconectar()
             raise HTTPException(status_code=500, detail=f"Erro ao atualizar o item: {str(e)}")
